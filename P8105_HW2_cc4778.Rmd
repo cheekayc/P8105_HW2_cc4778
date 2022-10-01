@@ -1,0 +1,39 @@
+---
+title: "P8105_HW2_cc4778"
+author: "Chee Kay Cheong"
+output: github_document
+---
+
+```{r setup, echo = FALSE}
+library(tidyverse)
+
+knitr::opts_chunk$set(collapse = TRUE, message = FALSE)
+```
+
+# Problem 1
+
+```{r read clean}
+subway_data = read_csv("./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
+  janitor::clean_names() %>%
+  select(line:entry, vending, ada) %>%
+  mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
+```
+
+I created a new dataset called '`subway_data`' that consists of 19 variables (columns) and 1868 observations (rows) which were extracted from the original csv datafile '`NYC_Transit_Subway_Entrance_And_Exit_Data.csv`'. So far, I have only cleaned the variable names by making them all lowercase, and I changed the variable type for `entry` from character to logical. 
+
+The 19 variables in this dataset are:
+
+* `line` (character)
+* `station_name` (character)
+* `station_latitude` (numeric)
+* `station_longitude` (numeric)
+* `route1` to `route7` (character)  <- 7 variables here
+* `route8` to `route11` (numeric)  <- 4 variables here
+* `entrance_type` (character)
+* `entry` (logical)
+* `vending` (character)
+* `ada` (logical)
+
+
+
+

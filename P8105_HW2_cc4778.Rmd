@@ -6,7 +6,7 @@ output: github_document
 
 ```{r setup, echo = FALSE}
 library(tidyverse)
-
+library(readxl)
 knitr::opts_chunk$set(collapse = TRUE, message = FALSE)
 ```
 
@@ -99,6 +99,60 @@ A4: **60**
 Q5: Of the stations that serve the A train, how many are ADA compliant?
 
 A5: **17**
+
+
+# Problem 2
+
+Read, clean, and organize Mr. Trash Wheel dataset:
+```{r Mr. trash wheel}
+mr_trash_wheel = 
+  read_excel(
+    "Data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",
+    sheet = "Mr. Trash Wheel", 
+    na = "") %>% 
+  janitor::clean_names() %>% 
+  select(dumpster:homes_powered) %>% 
+  drop_na() %>% 
+  mutate(
+    sports_balls = round(sports_balls),
+    sports_balls = as.integer(sports_balls),
+    trash_wheel = "Mr.")
+```
+
+Read, clean, and organize Professor Trash Wheel dataset:
+```{r Professor trash wheel}
+prof_trash_wheel = 
+  read_excel(
+    "Data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx", 
+    sheet = "Professor Trash Wheel", 
+    na = "") %>% 
+  janitor::clean_names() %>% 
+  drop_na() %>% 
+  mutate(
+    sports_balls = round(sports_balls),
+    sports_balls = as.integer(sports_balls),
+    trash_wheel = "Professor",
+    dumpster = as.character(dumpster))
+```
+
+Combine Mr. Trash Wheel and Professor Trash Wheel into one dataset:
+```{r combine trash wheel}
+trash_wheels = 
+  full_join(mr_trash_wheel, prof_trash_wheel, by = "trash_wheel") %>% 
+  janitor::clean_names()
+```
+
+```{r total trash weight, echo = FALSE}
+total_trash_wt = sum(trash_wheels$weight_tons_y, na.rm = TRUE)
+```
+
+```{r balls 2020}
+
+```
+
+
+After combining the two datasets into one dataset named `trash_wheels`, there are `r ncol(trash_wheels)` variables and `r nrow(trash_wheels)` observations in the new dataset. The total weight of trash collected by Professor Trash Wheel is `r sum(total_trash_wt)` tons.
+
 
 
 

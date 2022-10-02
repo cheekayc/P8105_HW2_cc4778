@@ -104,7 +104,7 @@ A5: **17**
 # Problem 2
 
 Read, clean, and organize Mr. Trash Wheel dataset:
-```{r Mr. trash wheel}
+```{r Mr. trash wheel, message = FALSE}
 mr_trash_wheel = 
   read_excel(
     "Data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",
@@ -116,7 +116,8 @@ mr_trash_wheel =
   mutate(
     sports_balls = round(sports_balls),
     sports_balls = as.integer(sports_balls),
-    trash_wheel = "Mr.")
+    trash_wheel = "Mr.",
+    dumpster = as.numeric(dumpster))
 ```
 
 Read, clean, and organize Professor Trash Wheel dataset:
@@ -137,31 +138,83 @@ prof_trash_wheel =
 Combine Mr. Trash Wheel and Professor Trash Wheel into one dataset:
 ```{r combine trash wheel}
 trash_wheels = 
-  full_join(mr_trash_wheel, prof_trash_wheel, by = "trash_wheel") %>% 
+  bind_rows(mr_trash_wheel, prof_trash_wheel) %>% 
   janitor::clean_names()
 ```
 
 ```{r total trash weight, echo = FALSE}
-total_trash_wt = sum(trash_wheels$weight_tons_y, na.rm = TRUE)
+total_trash_wt = 
+  trash_wheels %>% 
+  filter(trash_wheel == "Professor") %>% 
+  pull(weight_tons) %>% 
+  sum()
 ```
 
 ```{r balls 2020, echo = FALSE}
 total_balls =
   trash_wheels %>% 
-  filter(year_x == "2020") %>% 
-  select(year_x, sports_balls_x, trash_wheel) %>% 
-  pull(sports_balls_x) %>% 
+  filter(year == "2020", trash_wheel == "Mr.") %>% 
+  pull(sports_balls) %>% 
   sum
 ```
 
-I have added a new variable `trash_wheel` in both datasets before combining them, so that I know which data belongs to which dataset. After combining the two datasets into one dataset named `trash_wheels`, there are `r ncol(trash_wheels)` variables and `r nrow(trash_wheels)` observations. I used `full_join` to keep all the data in both datasets. In this new dataset `trash_wheels`, the original variable names have been modified such that an "x" has been added to the end of all variable names for `mr.trash_wheel`, whereas a "y" has been added to the end of all variable names for `prof_trash_wheel`. Since the `dumpster` variable in both datasets are not the same type (Mr. Trash Wheel is character, but Professor Trash Wheel is numeric), extra coding steps would be needed in order to merge the two datasets by `dumpster`, so I decided to merge them by `trash_wheel`. Hence, in the newly merged dataset, we can see that there are duplicated variable names (either followed by `_x` or `_y`), except for `trash_wheel`.
 
 Professor Trash Wheel has collected a total of `r sum(total_trash_wt)` tons of trash, while Mr. Trash Wheel has collected `r sum(total_balls)` sports balls in 2020.
 
 
 # Problem 3
 
+Read, clean, and organize the `pols-month.csv` dataset:
+```{r pols month, message = FALSE}
+pols = 
+  read_csv("Data/pols-month.csv") %>% 
+  janitor::clean_names() %>% 
+  separate(mon, into = c("year", "month", "day")) %>% 
+  mutate(
+    year = as.integer(year),
+    month = month.name[as.numeric(month)],
+    day = as.integer(day),
+    president = ifelse(prez_dem == 1, "democratic", "republican")) %>% 
+  select(-prez_dem, - prez_gop, -day)
+```
 
+Read, clean, and organize the `snp.csv` dataset:
+```{r snp, message = FALSE}
+snp = 
+  read_csv("Data/snp.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    date = as.Date(date, format = "%m/%d/%y")) %>% 
+  separate(date, into = c("year", "month", "day")) %>% 
+  arrange(year, month, day) %>% 
+  mutate(
+    year = as.integer(year),
+    month = month.name[as.numeric(month)],
+    day = as.integer(day)) %>% 
+  select(-day)
+```
 
+Read, clean, and organize the `unemployment.csv` dataset:
+```{r unemployment, message = FALSE}
+no_job = 
+  read_csv("Data/unemployment.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    jan:dec,
+    names_to = "month",
+    values_to = "unemployment_rate") %>% 
+  mutate(
+    month = recode
+    (month, 
+      jan = 1, feb = 2, mar = 3, apr = 4, may = 5, jun = 6, jul = 7, aug = 8, sep = 9, oct = 10, nov = 11, dec = 12),
+    month = month.name[as.numeric(month)])
+```
+
+Join the datasets by merging `snp` into `pols`, and merge `unemployment` into the result:
+```{r merge}
+pols_snp_unemp = 
+ left_join(pols, snp, by = c("year", "month")) %>% 
+ left_join(no_job, by = c("year", "month"))
+```
 
 

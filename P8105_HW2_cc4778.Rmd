@@ -34,6 +34,72 @@ The 19 variables in this dataset are:
 * `vending` (character)
 * `ada` (logical)
 
+As we can see from the variables and their types, this dataset is not tidy enough. Not all "routes" are character vectors; some routes are numeric. Also, it seems like all the routes should be combined into one variable.
+
+##### Questions
+
+Q1: How many distinct stations are there?
+  
+A1: **465**
+  
+```{r stations}
+subway_data %>% 
+  select(station_name, line) %>% 
+  distinct()
+```
+
+Q2: How many stations are ADA compliant?
+
+A2: **84**
+  
+```{r ADA}
+subway_data %>%
+  filter(ada == TRUE) %>% 
+  select(station_name, line) %>% 
+  distinct()
+```
+  
+Q3: What proportion of station entrances / exits without vending allow entrance?
+
+A3: **37.7%** of station entrances are not vending allowed. 
+  
+```{r vending entrance}
+subway_data %>% 
+  filter(vending == "NO") %>%
+  pull(entry) %>% 
+  mean
+```
+
+*Reformat data so that route number and route name are distinct variables.*
+```{r reformat}
+subway_data %>% 
+  pivot_longer(
+    cols = starts_with("route"),
+    names_to = "route_number",
+    values_to = "route",
+    values_transform = list(route = as.character)) %>% 
+  filter(route == "A") %>% 
+  select(station_name, line, route) %>% 
+  distinct()
+
+subway_data %>%
+  pivot_longer(
+    cols = starts_with("route"),
+    names_to = "route_number",
+    values_to = "route",
+    values_transform = list(route = as.character)) %>% 
+  filter(route == "A", ada == TRUE) %>% 
+  select(station_name, line, route, ada) %>% 
+  distinct()
+```
+Q4: How many distinct stations serve the A train?
+
+A4: **60** 
+
+Q5: Of the stations that serve the A train, how many are ADA compliant?
+
+A5: **17**
+
 
 
 

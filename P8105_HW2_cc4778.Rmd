@@ -7,19 +7,18 @@ output: github_document
 ```{r setup, echo = FALSE}
 library(tidyverse)
 library(readxl)
-knitr::opts_chunk$set(collapse = TRUE, message = FALSE)
 ```
 
 # Problem 1
 
-```{r read clean}
+```{r read clean, message = FALSE}
 subway_data = read_csv("./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
   janitor::clean_names() %>%
   select(line:entry, vending, ada) %>%
   mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
 ```
 
-I created a new dataset called '`subway_data`' that consists of 19 variables (columns) and 1868 observations (rows) which were extracted from the original csv datafile '`NYC_Transit_Subway_Entrance_And_Exit_Data.csv`'. So far, I have only cleaned the variable names by making them all lowercase, and I changed the variable type for `entry` from character to logical. 
+I created a new dataset called `subway_data` that consists of `r ncol(subway_data)` variables (columns) and `r nrow(subway_data)` observations (rows) which were extracted from the original csv datafile `NYC_Transit_Subway_Entrance_And_Exit_Data.csv`. The original csv dataset consists of 32 variables, but I only selected those that I want to keep in my new dataset. So far, I have only cleaned the variable names by making them all lowercase, and I changed the variable type for `entry` from character to logical. 
 
 The 19 variables in this dataset are:
 
@@ -34,43 +33,44 @@ The 19 variables in this dataset are:
 * `vending` (character)
 * `ada` (logical)
 
-As we can see from the variables and their types, this dataset is not tidy enough. Not all "routes" are character vectors; some routes are numeric. Also, it seems like all the routes should be combined into one variable.
+As we can see from the variables and their types, this dataset is not tidy enough. Not all "routes" are character vectors; some "routes" are numeric. Also, it seems like all the routes should be combined into one variable.
 
-##### Questions
+#### Questions
 
-Q1: How many distinct stations are there?
-  
-A1: **465**
-  
+We will be using the data from `subway_data` to answer the following questions:
+
+1. How many distinct stations are there?
 ```{r stations}
 subway_data %>% 
   select(station_name, line) %>% 
   distinct()
 ```
+Answer: There are **465** distinct stations.
 
-Q2: How many stations are ADA compliant?
 
-A2: **84**
-  
+2. How many stations are ADA compliant?
 ```{r ADA}
 subway_data %>%
   filter(ada == TRUE) %>% 
   select(station_name, line) %>% 
   distinct()
 ```
+Answer: **84** stations are ADA compliant. 
+ 
   
-Q3: What proportion of station entrances / exits without vending allow entrance?
-
-A3: **37.7%** of station entrances are not vending allowed. 
-  
+3. What proportion of station entrances / exits without vending allow entrance?
 ```{r vending entrance}
 subway_data %>% 
   filter(vending == "NO") %>%
   pull(entry) %>% 
   mean
 ```
+Answer: **37.7%** of station entrances are not vending allowed. 
 
-*Reformat data so that route number and route name are distinct variables.*
+
+*I have reformatted the data so that route number and route name are distinct variables.*
+
+4. How many distinct stations serve the A train?
 ```{r reformat}
 subway_data %>% 
   pivot_longer(
@@ -81,7 +81,12 @@ subway_data %>%
   filter(route == "A") %>% 
   select(station_name, line, route) %>% 
   distinct()
+```
+Answer: **60** distinct stations serve the A train.
 
+
+Q5: Of the stations that serve the A train, how many are ADA compliant?
+```{r A ada}
 subway_data %>%
   pivot_longer(
     cols = starts_with("route"),
@@ -92,13 +97,7 @@ subway_data %>%
   select(station_name, line, route, ada) %>% 
   distinct()
 ```
-Q4: How many distinct stations serve the A train?
-
-A4: **60** 
-
-Q5: Of the stations that serve the A train, how many are ADA compliant?
-
-A5: **17**
+Answer: Of the stations that serve the A train, **17** are ADA compliant.
 
 
 # Problem 2
@@ -119,6 +118,7 @@ mr_trash_wheel =
     trash_wheel = "Mr.",
     dumpster = as.numeric(dumpster))
 ```
+In the original excel datasheet for `Mr. Trash Wheel`, column 15, 16, and 17 are either notes or empty cells. In addition to that, there are some rows that do not have information related to a specific dumpster. Those rows have empty cells, and I marked those empty cells with 'NA'. Then, I only selected columns that have "values", and removed any rows that has a missing value `NA`. Next, I rounded up the number of sports balls to the nearest integer and converted the variable from numeric to integer. I have also created a new variable `trash_wheel` and give it a "value" `Mr.`, so that I can differentiate which data belongs to which trash wheel when I combine `Mr. Trash Wheel` with `Professor Trash Wheel`. Lastly, I have changed the variable type of `dumpster` in `Mr. Trash Wheel` dataset from character to numeric, so that it is synchronous to `Professor Trash Wheel` dataset, and that way I can combine them to a single, tidy dataset.
 
 Read, clean, and organize Professor Trash Wheel dataset:
 ```{r Professor trash wheel}
@@ -134,6 +134,13 @@ prof_trash_wheel =
     sports_balls = as.integer(sports_balls),
     trash_wheel = "Professor")
 ```
+Similar to the original `Mr. Trash Wheel` excel sheet, the original excel datasheet for `Professor Trash Wheel` contains some rows that do not have information related to a specific dumpster. Those rows have empty cells, and I marked those empty cells with 'NA'. I did not need to select columns because there are no unnecessary columns. Then, I removed the rows that have missing value `NA`. Again, I rounded up the number of sports balls to the nearest integer and converted the variable from numeric to integer. I have also created a new variable `trash_wheel` and give it a "value" `Professor`, so that I can differentiate which data belongs to which trash wheel when I combine `Mr. Trash Wheel` with `Professor Trash Wheel`. 
+
+Finally, I double checked the variables and their types in both datasets to make sure they are the same, so that I can combine them into a single, neat and tidy dataset.
+```{r check var}
+str(mr_trash_wheel)
+str(prof_trash_wheel)
+```
 
 Combine Mr. Trash Wheel and Professor Trash Wheel into one dataset:
 ```{r combine trash wheel}
@@ -141,25 +148,32 @@ trash_wheels =
   bind_rows(mr_trash_wheel, prof_trash_wheel) %>% 
   janitor::clean_names()
 ```
+Now that the two datasets have been merged, the new dataset `trash_wheels` have `r ncol(trash_wheels)` variables and `r nrow(trash_wheels)` observations. Because both datasets have exactly the same variable names and types, I am able to combine them without having the variables being duplicated, and I can still differentiate which data (or rows) refer to which trash wheel.
 
-```{r total trash weight, echo = FALSE}
+#### Questions
+
+I will  be using the merged dataset `trash_wheels` to answer the following questions:
+
+1. what was the total weight of trash collected by Professor Trash Wheel? 
+```{r total trash weight, message = FALSE}
 total_trash_wt = 
   trash_wheels %>% 
   filter(trash_wheel == "Professor") %>% 
   pull(weight_tons) %>% 
   sum()
 ```
+Answer: Professor Trash Wheel has collected a total of `r sum(total_trash_wt)` tons of trash.
 
-```{r balls 2020, echo = FALSE}
+
+2. What was the total number of sports balls collected by Mr. Trash Wheel in 2020?
+```{r balls 2020, message = FALSE}
 total_balls =
   trash_wheels %>% 
   filter(year == "2020", trash_wheel == "Mr.") %>% 
   pull(sports_balls) %>% 
   sum
 ```
-
-
-Professor Trash Wheel has collected a total of `r sum(total_trash_wt)` tons of trash, while Mr. Trash Wheel has collected `r sum(total_balls)` sports balls in 2020.
+Answer: Mr. Trash Wheel has collected `r sum(total_balls)` sports balls in 2020.
 
 
 # Problem 3
@@ -177,6 +191,12 @@ pols =
     president = ifelse(prez_dem == 1, "democratic", "republican")) %>% 
   select(-prez_dem, - prez_gop, -day)
 ```
+The original `pols-month.csv` dataset has 9 variables and 822 observations. The variable `mon` are dates written in this format: `yyyy-mm-dd`. I created a new dataset named `pols` and separated the dates in the variable `mon` into `year`, `month`, and `day`. Once separated, the three new variables automatically become character vectors. Hence, I changed `year` and `day` to integer vectors; and changed `month` to numeric vector first, and then used the `mon.name` function to change it to fully written month names (ie. January, February, etc.). 
+
+Referring to the variables `prez_gop` and `prez_dem`, on any row, if `prez_dem` = 1 (meaning the president at that time was democratic), then `prez_gop` would never be 1, and it has to be 0. Therefore, I only used `prez_dem` to create a new variable called `president`. If `prez_dem` = 1, then `president` = democratic; else if `prez_dem` = 0, then `president` = republican.
+
+Finally, I removed the variables `prez_dem`, `prez_gop`, and `day`. Now the `pols` dataset has `r ncol(pols)` variables and `r nrow(pols)` observations.
+
 
 Read, clean, and organize the `snp.csv` dataset:
 ```{r snp, message = FALSE}
@@ -193,6 +213,10 @@ snp =
     day = as.integer(day)) %>% 
   select(-day)
 ```
+The original `snp.csv` dataset has 2 variables and 787 observations. The variable `date` are dates written in this format: `m/d/yy`. I created a new dataset named `snp` and changed the date format to `yyyy-mm-dd`. Then, I separated the dates into `year`, `month`, and `day`. Once separated, the three new variables automatically become character vectors. But then I realized the `month` were not in order, so I arranged them in ascending order to be consistent with the `pols` dataset. This will be helpful when we merge the datasets. Then, I changed `year` and `day` to integer vectors; and changed `month` to numeric vector first, and then used the `mon.name` function to change it to fully written month names (ie. January, February, etc.). 
+
+Finally, I removed the variable `day` because the same variable was removed from the `pols` dataset as well. Now the `snp` dataset has `r ncol(snp)` variables and `r nrow(snp)` observations.
+
 
 Read, clean, and organize the `unemployment.csv` dataset:
 ```{r unemployment, message = FALSE}
@@ -209,12 +233,31 @@ no_job =
       jan = 1, feb = 2, mar = 3, apr = 4, may = 5, jun = 6, jul = 7, aug = 8, sep = 9, oct = 10, nov = 11, dec = 12),
     month = month.name[as.numeric(month)])
 ```
+The original `unemployment.csv` dataset has 13 variables and 68 observations, and I created a new dataset named `no_job` from this csv file. The first column was `year` and followed by "months". Therefore, I converted the "months" variables into one variable called `month`, and whatever values that follows are grouped into a new variable named `unemployment_rate` with respect to its corresponding month and year. Then, I realized that the months under the `month` variable are written in lowercase. I was not able to convert them directly to full word months. Therefore, I recoded each of the lowercase, abbreviated month to their corresponding month in numeric vector, and then changed them into non-abbreviated months using the `month.name` function. 
 
-Join the datasets by merging `snp` into `pols`, and merge `unemployment` into the result:
+Now the `no_job` dataset has `r ncol(no_job)` variables and `r nrow(no_job)` observations and the format, variable names and types are aligned with the `pols` and `snp` datasets.
+
+
+Join the datasets by merging `snp` into `pols`, and merge `no_job` into the result:
 ```{r merge}
 pols_snp_unemp = 
  left_join(pols, snp, by = c("year", "month")) %>% 
  left_join(no_job, by = c("year", "month"))
 ```
+Because the variables names and types, and the data is arranged in ascending order, I am able to merge the datasets together by `year` and `month` (because these two variables are common variables in all three datasets). 
+
+Now the newly created dataset `pols_snp_unemp` contains `r ncol(pols_snp_unemp)` variables and `r nrow(pols_snp_unemp)` observations. 
+
+The 11 variables are:
+
+* 2 common variables for all three datasets: `year` & `month`
+
+* 7 variables from `pols`: `gov_gop`, `sen_gop`, `rep_gop`, `gov_dem`, `sen_dem`, `rep_dem` & `president`
+
+* 1 variable from `snp`: `close`
+
+* 1 variable from `no_job`: `unemployment_rate`
+
+Because we merged the datasets based on the `pols` dataset, the `year` spans from 1947 to 2015, but we only have data for `close` which began in January, 1969, whearas the data for `unemployment_rate` only began in January, 1948. Therefore, we have some missing values coded as `NA` in those two columns. 
 
 

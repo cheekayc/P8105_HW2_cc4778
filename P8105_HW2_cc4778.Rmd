@@ -107,10 +107,10 @@ Read, clean, and organize Mr. Trash Wheel dataset:
 mr_trash_wheel = 
   read_excel(
     "Data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",
-    sheet = "Mr. Trash Wheel", 
+    sheet = "Mr. Trash Wheel",
+    range = "A2:N534",
     na = "") %>% 
   janitor::clean_names() %>% 
-  select(dumpster:homes_powered) %>% 
   drop_na() %>% 
   mutate(
     sports_balls = round(sports_balls),
@@ -126,6 +126,7 @@ prof_trash_wheel =
   read_excel(
     "Data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx", 
     sheet = "Professor Trash Wheel", 
+    range = "A2:N116",
     na = "") %>% 
   janitor::clean_names() %>% 
   drop_na() %>% 
@@ -206,14 +207,13 @@ snp =
   mutate(
     date = as.Date(date, format = "%m/%d/%y")) %>% 
   separate(date, into = c("year", "month", "day")) %>% 
-  arrange(year, month, day) %>% 
+  arrange(year, month, day) %>%
+  select(-day) %>% 
   mutate(
     year = as.integer(year),
-    month = month.name[as.numeric(month)],
-    day = as.integer(day)) %>% 
-  select(-day)
+    month = month.name[as.numeric(month)])
 ```
-The original `snp.csv` dataset has 2 variables and 787 observations. The variable `date` are dates written in this format: `m/d/yy`. I created a new dataset named `snp` and changed the date format to `yyyy-mm-dd`. Then, I separated the dates into `year`, `month`, and `day`. Once separated, the three new variables automatically become character vectors. But then I realized the `month` were not in order, so I arranged them in ascending order to be consistent with the `pols` dataset. This will be helpful when we merge the datasets. Then, I changed `year` and `day` to integer vectors; and changed `month` to numeric vector first, and then used the `mon.name` function to change it to fully written month names (ie. January, February, etc.). 
+The original `snp.csv` dataset has 2 variables and 787 observations. The variable `date` are dates written in this format: `m/d/yy`. I created a new dataset named `snp` and changed the date format to `yyyy-mm-dd`. Then, I separated the dates into `year`, `month`, and `day`. Once separated, the three new variables automatically become character vectors. But then I realized the `month` were not in order, so I arranged them in ascending order to be consistent with the `pols` dataset. This will be helpful when we merge the datasets. Then, I changed `year` and `day` to integer vectors; and changed `month` to numeric vector first, and then used the `month.name` function to change it to fully written month names (ie. January, February, etc.). 
 
 Finally, I removed the variable `day` because the same variable was removed from the `pols` dataset as well. Now the `snp` dataset has `r ncol(snp)` variables and `r nrow(snp)` observations.
 

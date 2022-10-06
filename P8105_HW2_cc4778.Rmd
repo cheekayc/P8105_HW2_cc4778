@@ -108,17 +108,16 @@ mr_trash_wheel =
   read_excel(
     "Data/Trash_Wheel_Collection_Data.xlsx",
     sheet = "Mr. Trash Wheel",
-    range = "A2:N549",
-    na = "") %>% 
+    range = "A2:N549") %>% 
   janitor::clean_names() %>% 
-  drop_na() %>% 
+  drop_na(dumpster) %>% 
   mutate(
     sports_balls = round(sports_balls),
     sports_balls = as.integer(sports_balls),
     trash_wheel = "Mr.",
     dumpster = as.numeric(dumpster))
 ```
-I created a new dataset named `mr_trash_wheel` selecting a range of cells from the excel file. There were some empty cells, and I marked those empty cells with 'NA' and removed them. Next, I rounded up the number of sports balls to the nearest integer and converted the variable from numeric to integer. I have also created a new variable `trash_wheel` and give it a "value" `Mr.`, so that I can differentiate which data belongs to which trash wheel when I combine `Mr. Trash Wheel` with `Professor Trash Wheel`. Lastly, I have changed the variable type of `dumpster` in `Mr. Trash Wheel` dataset from character to numeric, so that it is synchronous to `Professor Trash Wheel` dataset, and that way I can combine them to a single, tidy dataset.
+I created a new dataset named `mr_trash_wheel` selecting from a range of cells in the excel file, and removed any data that is irrelevant to `dumpster`.  Next, I rounded up the number of sports balls to the nearest integer and converted the variable from numeric to integer. I have also created a new variable `trash_wheel` and give it a "value" `Mr.`, so that I can differentiate which data belongs to which trash wheel when I combine `Mr. Trash Wheel` with `Professor Trash Wheel`. Lastly, I have changed the variable type of `dumpster` in `Mr. Trash Wheel` dataset from character to numeric, so that it is synchronous to `Professor Trash Wheel` dataset, and that way I can combine them to a single, tidy dataset.
 
 Read, clean, and organize Professor Trash Wheel dataset:
 ```{r Professor trash wheel}
@@ -126,15 +125,14 @@ prof_trash_wheel =
   read_excel(
     "Data/Trash_Wheel_Collection_Data.xlsx", 
     sheet = "Professor Trash Wheel", 
-    range = "A2:M96",
-    na = "") %>% 
+    range = "A2:M96") %>% 
   janitor::clean_names() %>% 
-  drop_na() %>% 
+  drop_na(dumpster) %>% 
   mutate(
     year = as.character(year),
     trash_wheel = "Professor")
 ```
-Similar to the original `Mr. Trash Wheel` excel sheet, the original excel datasheet for `Professor Trash Wheel` contains some rows that do not have information related to a specific dumpster. Those rows have empty cells, and I marked those empty cells with 'NA' and removed them. Again, I rounded up the number of sports balls to the nearest integer and converted the variable from numeric to integer. I have also created a new variable `trash_wheel` and give it a "value" `Professor`, so that I can differentiate which data belongs to which trash wheel when I combine `Mr. Trash Wheel` with `Professor Trash Wheel`. 
+I created a dataset named `prof_trash_wheel` using a similar process as the `mr_trash_wheel` dataset. I have also created a new variable `trash_wheel` and give it a "value" `Professor`, so that I can differentiate which data belongs to which trash wheel when I combine `Mr. Trash Wheel` with `Professor Trash Wheel`. 
 
 Finally, I double checked the variables and their types in both datasets to make sure they are the same, so that I can combine them into a single, neat and tidy dataset.
 ```{r check var}
